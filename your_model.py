@@ -11,18 +11,22 @@ from tensorpack.tfutils.tower import get_current_tower_context
 import tensorflow as tf
 import hyperparameters as hp
 
+def prediction_incorrect(logits, label, topk=1, name='incorrect_vector'):
+    with tf.name_scope('prediction_incorrect'):
+        x = tf.logical_not(tf.nn.in_top_k(logits, label, topk))
+    return tf.cast(x, tf.float32, name=name)
+
 class YourModel(ModelDesc):
 
     def __init__(self):
         super(YourModel, self).__init__()
         self.use_bias = True
 
-    def _get_inputs(self):
+    def inputs(self):
         return [InputDesc(tf.float32, [None, hp.img_size, hp.img_size, 3], 'input'),
                 InputDesc(tf.int32, [None], 'label')]
 
-    def _build_graph(self, inputs):
-        image, label = inputs
+    def build_graph(self, image, label):
 
         #####################################################################
         # TASK 1: Change architecture (to try to improve performance)
@@ -69,13 +73,11 @@ class YourModel(ModelDesc):
         add_moving_summary(cost)
         add_param_summary(('.*/kernel', ['histogram']))   # monitor W
         self.cost = tf.add_n([cost], name='cost')
+	return self.cost
 
-
-    def _get_optimizer(self):
-        lr = get_scalar_var('learning_rate', hp.learning_rate, summary=True)
-
+    def optimizer(self):
         # Use gradient descent as our optimizer
-        opt = tf.train.GradientDescentOptimizer(lr)
+        opt = tf.train.GradientDescentOptimizer(hp.learning_rate)
 
         # There are many other optimizers - https://www.tensorflow.org/api_guides/python/train#Optimizers
         # Including the momentum-based gradient descent discussed in class.
