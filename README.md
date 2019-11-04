@@ -8,4 +8,5 @@ numpy==1.15.4
 tensorpack=0.9.8
 tensorflow==1.14
 tensorflow-gpu==1.14
+gast=0.2.2
 ```
